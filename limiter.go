@@ -5,8 +5,7 @@ import (
 )
 
 const (
-	// DefaultLimit is the default concurrency limit
-	DefaultLimit = 100
+	DefaultLimit = 100 // DefaultLimit is the default concurrency limit
 )
 
 // ConcurrencyLimiter object
@@ -42,12 +41,11 @@ func NewConcurrencyLimiter(limit int) *ConcurrencyLimiter {
 // else wait until a go routine becomes available
 func (c *ConcurrencyLimiter) Execute(job func()) int {
 	ticket := <-c.tickets
-	atomic.AddInt32(&c.numInProgress, 1)
+	atomic.AddInt32(&c.numInProgress, 1) // needs to be second
 	go func() {
 		defer func() {
+			atomic.AddInt32(&c.numInProgress, -1) // needs to be first
 			c.tickets <- ticket
-			atomic.AddInt32(&c.numInProgress, -1)
-
 		}()
 
 		// run the job
@@ -62,11 +60,11 @@ func (c *ConcurrencyLimiter) Execute(job func()) int {
 // else wait until a go routine becomes available
 func (c *ConcurrencyLimiter) ExecuteWithTicket(job func(ticket int)) int {
 	ticket := <-c.tickets
-	atomic.AddInt32(&c.numInProgress, 1)
+	atomic.AddInt32(&c.numInProgress, 1) // needs to be second
 	go func() {
 		defer func() {
+			atomic.AddInt32(&c.numInProgress, -1) // needs to be first
 			c.tickets <- ticket
-			atomic.AddInt32(&c.numInProgress, -1)
 		}()
 
 		// run the job
@@ -81,11 +79,11 @@ func (c *ConcurrencyLimiter) ExecuteWithTicket(job func(ticket int)) int {
 //            un-desired race conditions
 func (c *ConcurrencyLimiter) Wait() {
 	for i := 0; i < c.limit; i++ {
-		_ = <-c.tickets
+		<-c.tickets
 	}
 }
 
-// GetNumInProgress returns a (racy) counter of how many go routines are active right now
+// GetNumInProgress returns a counter of how many go routines are active right now
 func (c *ConcurrencyLimiter) GetNumInProgress() int32 {
 	return atomic.LoadInt32(&c.numInProgress)
 }

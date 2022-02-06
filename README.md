@@ -1,9 +1,5 @@
 # go lang goroutine concurrency limiter
 
-## builds
-
-[![Build Status](https://travis-ci.org/korovkin/limiter.svg)](https://travis-ci.org/korovkin/limiter)
-
 ## example
 
 limit the number of concurrent go routines to 10:
